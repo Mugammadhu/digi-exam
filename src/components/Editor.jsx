@@ -71,27 +71,31 @@ const Editor = () => {
 
   useEffect(() => {
   const handleMessage = (event) => {
-    // Allow both production and localhost origins
-    const allowedOrigins = [
+    console.log("Received message from:", event.origin, "Data:", event.data);
+
+    // Verify origin matches expected domains
+    const validOrigins = [
       import.meta.env.VITE_CHILD_APP,
       "https://instantcoder.netlify.app",
       "http://localhost:5174"
-    ];
+    ].filter(Boolean);
 
-    if (!allowedOrigins.includes(event.origin)) {
-      console.warn("Rejected message from origin:", event.origin);
+    if (!validOrigins.includes(event.origin)) {
+      console.warn("Origin not allowed:", event.origin);
       return;
     }
 
     if (event.data?.type === "SUBMIT") {
-      console.log("Received submission:", event.data);
-      const { submissionId } = event.data.payload || {};
+      console.log("Processing submission...");
+      const submissionId = event.data.payload?.submissionId;
       
-      // Acknowledge receipt
-      event.source.postMessage({ type: "SUBMIT_ACK" }, event.origin);
-      
-      // Navigate to preview
-      navigate(`/preview/${submissionId}`);
+      if (submissionId) {
+        // Acknowledge receipt
+        event.source?.postMessage?.({ type: "SUBMIT_RECEIVED" }, event.origin);
+        
+        // Navigate to preview
+        navigate(`/preview/${submissionId}`);
+      }
     }
   };
 
