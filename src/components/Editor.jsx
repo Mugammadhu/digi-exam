@@ -48,27 +48,25 @@ const Editor = () => {
 
   useEffect(() => {
     const handleMessage = (event) => {
-      console.log("Received message in parent:", event.origin, event.data);
-      event.origin === import.meta.env.VITE_CHILD_APP ||
-      event.origin === "http://localhost:5173"
+  const allowedOrigins = [
+    import.meta.env.VITE_CHILD_APP,
+    "http://localhost:5174", // For local development
+    "https://instantcoder.netlify.app"
+  ];
+  
+  if (!allowedOrigins.includes(event.origin)) return;
 
-      if (!isExpectedOrigin) {
-      console.warn("Message from unexpected origin:", event.origin);
-      return;
-    }
-
-    if (event.data?.type === "SUBMIT") {
-      const { submissionId } = event.data.payload || {};
-      if (submissionId) {
-        console.log("Navigating to preview with submissionId:", submissionId);
-        navigate(`/preview/${submissionId}`);
+      if (event.data?.type === "SUBMIT") {
+        const { submissionId } = event.data.payload || {};
+        if (submissionId) {
+          navigate(`/preview/${submissionId}`);
+        }
       }
-    }
-  };
+    };
 
-  window.addEventListener("message", handleMessage);
-  return () => window.removeEventListener("message", handleMessage);
-}, [navigate]);
+    window.addEventListener("message", handleMessage);
+    return () => window.removeEventListener("message", handleMessage);
+  }, [navigate]);
 
   // Language to icon mapping
   const languageIcons = {
