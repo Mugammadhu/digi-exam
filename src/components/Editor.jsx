@@ -48,22 +48,27 @@ const Editor = () => {
 
   useEffect(() => {
     const handleMessage = (event) => {
-          const expectedOrigin = import.meta.env.VITE_CHILD_APP;
-          console.log(expectedOrigin)
+      console.log("Received message in parent:", event.origin, event.data);
+      event.origin === import.meta.env.VITE_CHILD_APP ||
+      event.origin === "http://localhost:5173"
 
-    if (event.origin !== expectedOrigin) return;
+      if (!isExpectedOrigin) {
+      console.warn("Message from unexpected origin:", event.origin);
+      return;
+    }
 
-      if (event.data?.type === "SUBMIT") {
-        const { submissionId } = event.data.payload || {};
-        if (submissionId) {
-          navigate(`/preview/${submissionId}`);
-        }
+    if (event.data?.type === "SUBMIT") {
+      const { submissionId } = event.data.payload || {};
+      if (submissionId) {
+        console.log("Navigating to preview with submissionId:", submissionId);
+        navigate(`/preview/${submissionId}`);
       }
-    };
+    }
+  };
 
-    window.addEventListener("message", handleMessage);
-    return () => window.removeEventListener("message", handleMessage);
-  }, [navigate]);
+  window.addEventListener("message", handleMessage);
+  return () => window.removeEventListener("message", handleMessage);
+}, [navigate]);
 
   // Language to icon mapping
   const languageIcons = {
