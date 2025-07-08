@@ -46,27 +46,59 @@ const Editor = () => {
     setIsLoading(false);
   }, [iframeLoaded, question, language]);
 
-  useEffect(() => {
-    const handleMessage = (event) => {
-  const allowedOrigins = [
-    import.meta.env.VITE_CHILD_APP,
-    "http://localhost:5174", // For local development
-    "https://instantcoder.netlify.app"
-  ];
+  // useEffect(() => {
+  //   const handleMessage = (event) => {
+  // const allowedOrigins = [
+  //   import.meta.env.VITE_CHILD_APP,
+  //   "http://localhost:5174", // For local development
+  //   "https://instantcoder.netlify.app"
+  // ];
   
-  if (!allowedOrigins.includes(event.origin)) return;
+  // if (!allowedOrigins.includes(event.origin)) return;
 
-      if (event.data?.type === "SUBMIT") {
-        const { submissionId } = event.data.payload || {};
-        if (submissionId) {
-          navigate(`/preview/${submissionId}`);
-        }
-      }
-    };
+  //     if (event.data?.type === "SUBMIT") {
+  //       const { submissionId } = event.data.payload || {};
+  //       if (submissionId) {
+  //         navigate(`/preview/${submissionId}`);
+  //       }
+  //     }
+  //   };
 
-    window.addEventListener("message", handleMessage);
-    return () => window.removeEventListener("message", handleMessage);
-  }, [navigate]);
+  //   window.addEventListener("message", handleMessage);
+  //   return () => window.removeEventListener("message", handleMessage);
+  // }, [navigate]);
+
+
+  useEffect(() => {
+  const handleMessage = (event) => {
+    // Allow both production and localhost origins
+    const allowedOrigins = [
+      import.meta.env.VITE_CHILD_APP,
+      "https://instantcoder.netlify.app",
+      "http://localhost:5174"
+    ];
+
+    if (!allowedOrigins.includes(event.origin)) {
+      console.warn("Rejected message from origin:", event.origin);
+      return;
+    }
+
+    if (event.data?.type === "SUBMIT") {
+      console.log("Received submission:", event.data);
+      const { submissionId } = event.data.payload || {};
+      
+      // Acknowledge receipt
+      event.source.postMessage({ type: "SUBMIT_ACK" }, event.origin);
+      
+      // Navigate to preview
+      navigate(`/preview/${submissionId}`);
+    }
+  };
+
+  window.addEventListener("message", handleMessage);
+  return () => window.removeEventListener("message", handleMessage);
+}, [navigate]);
+
 
   // Language to icon mapping
   const languageIcons = {
