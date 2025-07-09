@@ -28,7 +28,7 @@ const Preview = () => {
   }, [submissionId]);
 
   const handleEdit = () => {
-    navigate('/editor', {
+    navigate('/', {
       state: {
         question: submission.question,
         language: submission.language,
