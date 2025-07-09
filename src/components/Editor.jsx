@@ -1,8 +1,5 @@
-
-
-
 import React, { useEffect, useRef, useState } from "react";
-import { useLocation, useNavigate,useSearchParams } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import pythonIcon from '../assets/icons/python.svg';
 import javascriptIcon from '../assets/icons/javascript.svg';
@@ -23,11 +20,11 @@ const Editor = () => {
   const navigate = useNavigate();
   const [iframeLoaded, setIframeLoaded] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
-    const [searchParams] = useSearchParams();
+  const [searchParams] = useSearchParams();
   const language = searchParams.get("language");
   const question = searchParams.get("question");
-
-    console.log(import.meta.env.VITE_BACKEND_URL)
+  const [showPreviewModal, setShowPreviewModal] = useState(false);
+  const [submissionData, setSubmissionData] = useState(null);
 
   useEffect(() => {
     if (!iframeLoaded || !iframeRef.current?.contentWindow || !question) return;
@@ -38,7 +35,7 @@ const Editor = () => {
           type: "INIT",
           payload: { question, language }
         },
-        import.meta.env.VITE_CHILD_APP 
+        import.meta.env.VITE_CHILD_APP
       );
     };
 
@@ -47,41 +44,38 @@ const Editor = () => {
   }, [iframeLoaded, question, language]);
 
   useEffect(() => {
-  const handleMessage = (event) => {
-    console.log("Received message from:", event.origin, "Data:", event.data);
+    const handleMessage = (event) => {
+      const validOrigins = [
+        import.meta.env.VITE_CHILD_APP,
+        "https://instantcoder.netlify.app",
+        "http://localhost:5174"
+      ].filter(Boolean);
 
-    // Verify origin matches expected domains
-    const validOrigins = [
-      import.meta.env.VITE_CHILD_APP,
-      "https://instantcoder.netlify.app",
-      "http://localhost:5174"
-    ].filter(Boolean);
+      if (!validOrigins.includes(event.origin)) return;
 
-    if (!validOrigins.includes(event.origin)) {
-      console.warn("Origin not allowed:", event.origin);
-      return;
-    }
-
-    if (event.data?.type === "SUBMIT") {
-      console.log("Processing submission...");
-      const submissionId = event.data.payload?.submissionId;
-      
-      if (submissionId) {
-        // Acknowledge receipt
-        event.source?.postMessage?.({ type: "SUBMIT_RECEIVED" }, event.origin);
-        
-        // Navigate to preview
-        navigate(`/preview/${submissionId}`);
+      if (event.data?.type === "SUBMIT") {
+        const submissionId = event.data.payload?.submissionId;
+        if (submissionId) {
+          event.source?.postMessage?.({ type: "SUBMIT_RECEIVED" }, event.origin);
+          const fetchSubmission = async () => {
+            try {
+              const res = await fetch(`${import.meta.env.VITE_BACKEND_URL}/api/submissions/${submissionId}`);
+              const data = await res.json();
+              setSubmissionData(data);
+              setShowPreviewModal(true);
+            } catch (err) {
+              console.error("Failed to fetch submission preview:", err);
+            }
+          };
+          fetchSubmission();
+        }
       }
-    }
-  };
+    };
 
-  window.addEventListener("message", handleMessage);
-  return () => window.removeEventListener("message", handleMessage);
-}, [navigate]);
+    window.addEventListener("message", handleMessage);
+    return () => window.removeEventListener("message", handleMessage);
+  }, [navigate]);
 
-
-  // Language to icon mapping
   const languageIcons = {
     python: pythonIcon,
     javascript: javascriptIcon,
@@ -133,9 +127,9 @@ const Editor = () => {
                   whileHover={{ scale: 1.03 }}
                   whileTap={{ scale: 0.98 }}
                 >
-                  <img 
-                    src={languageIcons[language?.toLowerCase()] || allIcon} 
-                    alt={language} 
+                  <img
+                    src={languageIcons[language?.toLowerCase()] || allIcon}
+                    alt={language}
                     className="language-icon"
                   />
                   <span className="language-name">{language || 'All Languages'}</span>
@@ -158,8 +152,38 @@ const Editor = () => {
                 {question}
               </motion.h1>
             </motion.div>
+
+            {submissionData && !showPreviewModal && (
+              <motion.button
+                className="preview-button"
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+                onClick={() => setShowPreviewModal(true)}
+              >
+                👁️ Preview Code
+              </motion.button>
+            )}
           </div>
         </motion.div>
+
+        {showPreviewModal && submissionData && (
+          <div className="modal-overlay">
+            <motion.div
+              className="preview-modal"
+              initial={{ scale: 0.8, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              transition={{ duration: 0.3 }}
+            >
+              <div className="modal-header">
+                <h2>{submissionData.language.toUpperCase()} Code</h2>
+                <button onClick={() => setShowPreviewModal(false)}>✕</button>
+              </div>
+              <pre className="modal-code">
+                <code>{submissionData.code}</code>
+              </pre>
+            </motion.div>
+          </div>
+        )}
 
         <motion.div
           className="editor-wrapper"
