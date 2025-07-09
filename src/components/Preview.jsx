@@ -28,7 +28,12 @@ const Preview = () => {
   }, [submissionId]);
 
   const handleEdit = () => {
-    navigate('/', {
+    const queryParams = new URLSearchParams({
+    question: submission.question,
+    language: submission.language,
+  }).toString();
+
+    navigate(`/?${queryParams}`, {
       state: {
         question: submission.question,
         language: submission.language,
