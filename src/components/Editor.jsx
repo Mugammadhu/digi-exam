@@ -46,29 +46,6 @@ const Editor = () => {
     setIsLoading(false);
   }, [iframeLoaded, question, language]);
 
-  // useEffect(() => {
-  //   const handleMessage = (event) => {
-  // const allowedOrigins = [
-  //   import.meta.env.VITE_CHILD_APP,
-  //   "http://localhost:5174", // For local development
-  //   "https://instantcoder.netlify.app"
-  // ];
-  
-  // if (!allowedOrigins.includes(event.origin)) return;
-
-  //     if (event.data?.type === "SUBMIT") {
-  //       const { submissionId } = event.data.payload || {};
-  //       if (submissionId) {
-  //         navigate(`/preview/${submissionId}`);
-  //       }
-  //     }
-  //   };
-
-  //   window.addEventListener("message", handleMessage);
-  //   return () => window.removeEventListener("message", handleMessage);
-  // }, [navigate]);
-
-
   useEffect(() => {
   const handleMessage = (event) => {
     console.log("Received message from:", event.origin, "Data:", event.data);
