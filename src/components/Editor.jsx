@@ -125,14 +125,21 @@ const Editor = () => {
               <h1 className="question-text">{question}</h1>
             </div>
 
-            {submissionData && (
-              <div className="code-preview">
-                <h3 className="preview-heading">Submitted Code</h3>
-                <pre className="preview-scroll">
-                  <code>{submissionData.code}</code>
-                </pre>
-              </div>
-            )}
+{submissionData?.code && (
+  <motion.div
+    className="code-preview"
+    initial={{ x: 100, opacity: 0 }}
+    animate={{ x: 0, opacity: 1 }}
+    exit={{ x: 100, opacity: 0 }}
+    transition={{ type: "spring", stiffness: 60, damping: 15 }}
+  >
+    <div className="preview-heading">Your Submitted Code</div>
+    <div className="preview-scroll">
+      <code>{submissionData.code}</code>
+    </div>
+  </motion.div>
+)}
+
           </div>
         </motion.div>
 
