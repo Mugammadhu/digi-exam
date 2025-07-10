@@ -1,6 +1,9 @@
+// Editor.jsx
 import React, { useEffect, useRef, useState } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
+import './editor.css';
+
 import pythonIcon from '../assets/icons/python.svg';
 import javascriptIcon from '../assets/icons/javascript.svg';
 import javaIcon from '../assets/icons/java.svg';
@@ -13,7 +16,6 @@ import rubyIcon from '../assets/icons/ruby.svg';
 import swiftIcon from '../assets/icons/swift.svg';
 import phpIcon from '../assets/icons/php.svg';
 import allIcon from '../assets/icons/all.svg';
-import './editor.css';
 
 const Editor = () => {
   const iframeRef = useRef();
@@ -23,7 +25,6 @@ const Editor = () => {
   const [searchParams] = useSearchParams();
   const language = searchParams.get("language");
   const question = searchParams.get("question");
-  const [showPreviewModal, setShowPreviewModal] = useState(false);
   const [submissionData, setSubmissionData] = useState(null);
 
   useEffect(() => {
@@ -62,7 +63,6 @@ const Editor = () => {
               const res = await fetch(`${import.meta.env.VITE_BACKEND_URL}/api/submissions/${submissionId}`);
               const data = await res.json();
               setSubmissionData(data);
-              setShowPreviewModal(true);
             } catch (err) {
               console.error("Failed to fetch submission preview:", err);
             }
@@ -110,80 +110,31 @@ const Editor = () => {
           transition={{ delay: 0.2 }}
         >
           <div className="header-content">
-            <motion.div
-              className="question-display"
-              initial={{ x: -20 }}
-              animate={{ x: 0 }}
-              transition={{ type: "spring", stiffness: 100 }}
-            >
-              <motion.div
-                className="question-meta"
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                transition={{ delay: 0.3 }}
-              >
-                <motion.span
-                  className="language-badge"
-                  whileHover={{ scale: 1.03 }}
-                  whileTap={{ scale: 0.98 }}
-                >
+            <div className="question-side">
+              <div className="question-meta">
+                <span className="language-badge">
                   <img
                     src={languageIcons[language?.toLowerCase()] || allIcon}
                     alt={language}
                     className="language-icon"
                   />
                   <span className="language-name">{language || 'All Languages'}</span>
-                </motion.span>
-                <motion.span
-                  className="question-label"
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  transition={{ delay: 0.4 }}
-                >
-                  PROBLEM STATEMENT
-                </motion.span>
-              </motion.div>
-              <motion.h1
-                className="question-text"
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.5 }}
-              >
-                {question}
-              </motion.h1>
-            </motion.div>
+                </span>
+                <span className="question-label">PROBLEM STATEMENT</span>
+              </div>
+              <h1 className="question-text">{question}</h1>
+            </div>
 
-            {submissionData && !showPreviewModal && (
-              <motion.button
-                className="preview-button"
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
-                onClick={() => setShowPreviewModal(true)}
-              >
-                👁️ Preview Code
-              </motion.button>
+            {submissionData && (
+              <div className="code-preview">
+                <h3 className="preview-heading">Submitted Code</h3>
+                <pre className="preview-scroll">
+                  <code>{submissionData.code}</code>
+                </pre>
+              </div>
             )}
           </div>
         </motion.div>
-
-        {showPreviewModal && submissionData && (
-          <div className="modal-overlay">
-            <motion.div
-              className="preview-modal"
-              initial={{ scale: 0.8, opacity: 0 }}
-              animate={{ scale: 1, opacity: 1 }}
-              transition={{ duration: 0.3 }}
-            >
-              <div className="modal-header">
-                <h2>{submissionData.language.toUpperCase()} Code</h2>
-                <button onClick={() => setShowPreviewModal(false)}>✕</button>
-              </div>
-              <pre className="modal-code">
-                <code>{submissionData.code}</code>
-              </pre>
-            </motion.div>
-          </div>
-        )}
 
         <motion.div
           className="editor-wrapper"
